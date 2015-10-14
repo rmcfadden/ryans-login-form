@@ -43,57 +43,41 @@ class ryansLoginForm {
         add_shortcode( 'ryans_login_form', array( $this, 'shortcode' )); 
         add_action('admin_menu', array( $this, 'admin_option_init'));
         add_action('admin_init', array( $this, 'admin_init' ));
-        add_action('init', array( $this, 'init' ));
-
-        $this->default_amount_description  = __('Please enter payment amount and click the button below:');
+        add_action('init', array( $this, 'init' ));        
     }
 
 
-    // Good refeence for paypal button code: http://planetoftheweb.com/components/promos.php?id=542
-    public function shortcode() 
-    {
+    public function read_login_form_code(){
+        ob_start();
+
+        require(plugin_dir_url(__FILE__) . 'login-form.js');
+
+        $output_text = ob_get_contents();
+
+        ob_end_clean();
+
+        return $output_text;
+    }
+
+
+    public function shortcode() {
         $options = get_option( ryansLoginForm::$options_name );
 
-        // include: http://stackoverflow.com/questions/5128137/how-to-pass-a-variable-through-the-require-or-include-function-of-php
+        $contents = read_login_form_code();       
 
-/*
-        $image_url = 'https://www.paypal.com/en_US/i/btn/btn_donate_SM.gif';
-        $cmd_value = '_xclick';    
-
-        if(isset($options['button_id'])){ 
-            $button_id = $options['button_id'];
-
-            if(isset(ryansLoginForm::$paypal_buttons[$button_id])){
-                $image_url = ryansLoginForm::$paypal_buttons[$button_id][1];
-  
-                if(isset(ryansLoginForm::$paypal_buttons[$button_id][2])){
-                    $command_value = ryansLoginForm::$paypal_buttons[$button_id][2];
-                    if($command_value == "donate"){
-                        $cmd_value = "_donations";
-                    }
-                }                                        
-            }
-        }
-
-
-        return '<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-            <div class="ryans-login-form">
-                <input type="hidden" name="cmd" value="' . $cmd_value . '">
-                <input type="hidden" name="business" value="' . $paypal_id . '">'
-                . $text_amount_label 
-                . $text_amount_text .
-                '<input type="image" src="'. $image_url . '" name="submit">
-                <input type="hidden" name="currency_code" value="' . $currency .'">
-            </div>
-            </form>';
-*/
-        return '';
+        return $contents;
     }
 
 
     public function init() {
-        wp_enqueue_script('ryans-login-form.js', plugin_dir_url(__FILE__) . 'ryans-login-form.js', array('jquery')); 
-        wp_enqueue_style( 'ryans-login-form', plugin_dir_url(__FILE__) . 'ryans-login-form.css' ); 
+        wp_enqueue_script('ryans-login-form', plugin_dir_url(__FILE__) . 'ryans-login-form.js', array('jquery')); 
+        wp_enqueue_style( 'ryans-login-form', plugin_dir_url(__FILE__) . 'ryans-login-form.css' );
+
+        wp_localize_script('ryans-login-form', 'login_object', array( 
+            'url' => admin_url( 'admin-ajax.php' ),
+            'redirecturl' => 'members',
+            'loadingmessage' => __('Signing in...')
+        ));
     }
 
 
@@ -122,7 +106,7 @@ class ryansLoginForm {
 
     public function admin_init() {
 
-        wp_enqueue_script('ryans-login-form-admin.js', plugin_dir_url(__FILE__) . 'ryans-login-form-admin.js', array('jquery'));
+        //wp_enqueue_script('ryans-login-form-admin.js', plugin_dir_url(__FILE__) . 'ryans-login-form-admin.js', array('jquery'));
         wp_enqueue_script('ryans-login-form.js', plugin_dir_url(__FILE__) . 'ryans-login-form.js', array('jquery')); 
 
         register_setting(
